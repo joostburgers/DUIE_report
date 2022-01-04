@@ -1,0 +1,234 @@
+---
+title: "Impact Report: Accelerator 2019-21"
+subtitle: "Menstrual Health and Hygiene"
+author:
+- name: Taylor Conger
+  affiliation: Duke university, Innovation and Enterprise
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r load_libraries}
+library(tidyverse)
+library(plotly)
+
+```
+
+
+```{r import_data}
+baseline_data <- read_csv("data/Cohort 1 M&E Analysis_Baseline_trimmed.csv", show_col_types = FALSE)
+midline_data <- read_csv("data/Cohort 1 M&E Analysis_Midline_trimmed.csv", show_col_types = FALSE)
+endline_data <- read_csv("data/Cohort 1 M&E Analysis_Endline_trimmed.csv", show_col_types = FALSE)
+```
+
+```{r data_clean}
+
+baseline_data <- baseline_data %>% 
+                  drop_na(OrgID)
+
+midline_data <- midline_data %>% 
+                  drop_na(OrgID)
+
+endline_data <- endline_data %>% 
+                  drop_na(OrgID)
+
+
+```
+
+
+## Introduction
+
+The following data was compiled using three separate surveys: a) an intake survey administered at the beginning of the program; b) a midline survey; c) and an end-point survey. When these surveys were devised at the beginning of the program in 2019 they could not anticipate the vicissitudes that would be wrought by the COVID-19 pandemic. Consequently, later iterations of the survey probed different points of saliency. Additionally, questions were also revised as part of on iterative process to refine the survey more generally. On occasion, this has meant that questions are not always perfectly in alignment between different measuring points. All cases of such discrepancies have been noted.
+
+
+## Target Demographics
+
+Widely ranging in their approach, the six projects were also operating in different contexts. 
+
+### Economic Target Group
+
+The organizations were surveyed on their target population 
+
+```{r economic_demographics}
+baseline_economic_demo <- baseline_data %>%
+  drop_na(OrgID) %>%
+  select(Survey:lower_income) %>%
+  pivot_longer(high_income:lower_income,
+               names_to = "income_level",
+               values_to = "Percent") %>%
+  group_by(Survey,income_level) %>%
+  summarise(total = round(mean(as.numeric(Percent),0))) %>% 
+  mutate(income_level = str_to_title(str_replace_all(income_level,"_"," ")))
+```
+
+### Economic Plot Baseline
+
+```{r economic_demographics_plot}
+
+plot_economic_demographics <- baseline_economic_demo %>% 
+                              plot_ly(
+                              labels = ~income_level, values = ~total, type = 'pie')
+
+plot_economic_demographics
+
+```
+
+
+### Economic Plot Midline
+
+```{r midline_economic_demo}
+midline_economic_demo <- midline_data %>%
+  drop_na(OrgID) %>%
+  mutate(across(high_income:lower_income, as.integer)) %>% 
+  
+         select(Survey:lower_income) %>%
+  
+  pivot_longer(high_income:lower_income,
+               names_to = "income_level",
+               values_to = "Percent") %>%
+  group_by(Survey,income_level) %>%
+   summarise(total = round(mean(as.numeric(Percent),0))) %>% 
+  mutate(income_level = str_to_title(str_replace_all(income_level,"_"," ")))
+```
+
+
+```{r economic_demographics_plot_midline}
+
+plot_economic_demographics_midline <- midline_economic_demo %>% 
+                              plot_ly(
+                              labels = ~income_level, values = ~total, type = 'pie')
+plot_economic_demographics_midline
+
+```
+
+### Economic Plot Endline
+
+```{r endline_demographic_demo}
+endline_economic_demo <- endline_data %>%
+  
+  mutate(across(high_income:lower_income, as.integer)) %>% 
+  
+         select(Survey:lower_income) %>%
+  
+  pivot_longer(high_income:lower_income,
+               names_to = "income_level",
+               values_to = "Percent") %>%
+  group_by(Survey,income_level) %>%
+   summarise(total = round(mean(as.numeric(Percent),0))) %>% 
+  mutate(income_level = str_to_title(str_replace_all(income_level,"_"," ")))
+
+
+
+```
+
+
+
+```{r plot_endline_demographic_demo}
+plot_economic_demographics_endline <- endline_economic_demo %>% 
+                              plot_ly(
+                              labels = ~income_level, values = ~total, type = 'pie')
+plot_economic_demographics_endline
+```
+
+### Observations
+
+There is a shift away from lower income and towards middle and higher income. Part of this shift can be explained by a slight change in the phrase of the question. i.e. Poor and Very Poor, were not part of the initial survey. Expecting that this could also be explained by....
+
+
+### Alternative visualization
+
+This is another version of the same data that is more compact and shows the most important difference.
+
+```{r}
+all_demographic_economic <- baseline_economic_demo %>%
+  bind_rows(midline_economic_demo) %>%
+  bind_rows(endline_economic_demo) %>%
+  mutate(income_level = str_to_lower(str_replace_all(income_level, " ", "_"))) %>%
+  pivot_wider(names_from = income_level, values_from = total)
+
+all_demographic_economic_plot <- all_demographic_economic %>%
+  plot_ly(
+    x = ~ Survey,
+    y = ~ lower_income,
+    type = "bar",
+    name = "Lower Income"
+  )
+all_demographic_economic_plot <-  all_demographic_economic_plot %>%
+  add_trace(y = ~ middle_income, name = "Middle Income") %>%
+  add_trace(y = ~ high_income, name = "High Income")
+
+all_demographic_economic_plot <-
+  all_demographic_economic_plot %>% layout(
+    xaxis = list(categoryorder = "trace"
+                 ),
+    yaxis = list(title = "Percent"), 
+    barmode = "stack")
+
+all_demographic_economic_plot
+```
+
+
+
+
+### Geographic Information
+
+Target groups were also differentiated by location: Urban, suburban/periurban, and rural.
+
+```{r geographic_information}
+baseline_geographic_demo <- baseline_data %>%
+                          select(Survey:Organization, urban:rural) %>% 
+                            mutate(across(urban:rural,as.integer))
+
+midline_geographic_demo <- midline_data %>% 
+                            select(Survey:Organization, urban:rural) %>% 
+                            mutate(across(urban:rural,as.integer))
+
+endline_geographic_demo <- endline_data %>% 
+                            select(Survey:Organization, urban:rural) %>% 
+                             mutate(across(urban:rural,as.integer))
+
+all_geographic_demo <- baseline_geographic_demo %>% 
+                      bind_rows(midline_geographic_demo) %>% 
+                      bind_rows(endline_geographic_demo)
+
+all_geographic_demo_table <- all_geographic_demo %>% 
+                        group_by(Survey) %>% 
+                        summarise(urban = mean(urban), suburban_periurban = mean(suburban_periurban), rural = mean(rural))
+
+```
+
+
+```{r plot_geographic}
+
+all_geographic_demo_plot <- all_geographic_demo_table %>%
+  plot_ly(
+    x = ~ Survey,
+    y = ~ rural,
+    type = "bar",
+    name = "Rural"
+  )
+all_geographic_demo_plot <-  all_geographic_demo_plot %>%
+  add_trace(y = ~ suburban_periurban, name = "Suburban/Peri-Urban") %>%
+  add_trace(y = ~ urban, name = "Urban")
+
+all_geographic_demo_plot <-
+all_geographic_demo_plot %>% layout(
+    xaxis = list(categoryorder = "array",
+                 categoryarray = c("baseline", "midline", "endline")),
+    yaxis = list(title = "Percent"), 
+    barmode = "stack")
+
+all_geographic_demo_plot
+
+
+```
+
+### Geographic trends
+
+The focus becomes more urban over time.
+
