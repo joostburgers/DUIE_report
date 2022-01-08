@@ -5,17 +5,25 @@ author:
 - name: Taylor Conger
   affiliation: Duke university, Innovation and Enterprise
 date: "`r format(Sys.time(), '%d %B %Y')`"
-output: html_document
+output: rmdformats::html_clean
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 
 ```{r load_libraries}
 library(tidyverse)
 library(plotly)
+library(stringi)
+library(scales)
+library(stringr)
+library(plotly)
+library(textstem)
+library(shiny)
+library(lubridate)
+library(rmdformats)
 
 ```
 
@@ -29,13 +37,44 @@ endline_data <- read_csv("data/Cohort 1 M&E Analysis_Endline_trimmed.csv", show_
 ```{r data_clean}
 
 baseline_data <- baseline_data %>% 
-                  drop_na(OrgID)
+                  drop_na(OrgID) %>% 
+     mutate(Organization = ifelse(str_detect(Organization, "SaCo"),"SaCoDé",Organization))
 
 midline_data <- midline_data %>% 
-                  drop_na(OrgID)
+                  drop_na(OrgID) %>% 
+     mutate(Organization = ifelse(str_detect(Organization, "SaCo"),"SaCoDé",Organization))
 
 endline_data <- endline_data %>% 
-                  drop_na(OrgID)
+                  drop_na(OrgID) %>% 
+                 mutate(Organization = ifelse(str_detect(Organization, "SaCo"),"SaCoDé",Organization))
+
+
+```
+
+```{r load_color_scheme, echo=FALSE}
+#Page styling
+
+#This is where you create your own custom color palette for the traces.
+duke_colorway = c("#C84E00","#E89923","#FFD960","#A1B70D","#339898","#1D6363","#005587","#0577B1","#993399")
+
+#This controls the background color for the entire chart. Probably best left white.
+duke_paperbackground = c('rgba(255,255,255,0)')
+
+#This controls the background for the plot. Probably best left white.
+duke_plotcolor = c('rgba(255,255,255,.4)')
+
+#Margin 
+
+m <- list(l = 50, r = 50, b = 50, t = 50, pad = 4)
+
+#Caption Style
+
+fig_caption <- "font-family: 'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif; font-weight: normal; font-size:110%"
+
+plot_font <- list(
+  family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
+  size = 15,
+  color = '#363636')
 
 
 ```
@@ -48,11 +87,11 @@ The following data was compiled using three separate surveys: a) an intake surve
 
 ## Target Demographics
 
-Widely ranging in their approach, the six projects were also operating in different contexts. 
+Widely ranging in their approach, the six projects were also operating in different contexts. During the initial phases of the fellowship, the target demographics skewed overwhelmingly towards lower-income rural users. Over the course of the fellowship, the target demographic shifted more towards higher-income and urban beneficiaries. 
 
 ### Economic Target Group
 
-The organizations were surveyed on their target population 
+The organizations were surveyed on their target population.  
 
 ```{r economic_demographics}
 baseline_economic_demo <- baseline_data %>%
@@ -72,7 +111,18 @@ baseline_economic_demo <- baseline_data %>%
 
 plot_economic_demographics <- baseline_economic_demo %>% 
                               plot_ly(
-                              labels = ~income_level, values = ~total, type = 'pie')
+                              labels = ~income_level, 
+                              values = ~total, 
+                              type = 'pie')
+
+plot_economic_demographics <- plot_economic_demographics %>% 
+  layout(title = "Economic Target Population: Baseline",
+         colorway=duke_colorway,
+         paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+     margin = m,
+    font=plot_font
+     )
 
 plot_economic_demographics
 
@@ -102,6 +152,16 @@ midline_economic_demo <- midline_data %>%
 plot_economic_demographics_midline <- midline_economic_demo %>% 
                               plot_ly(
                               labels = ~income_level, values = ~total, type = 'pie')
+
+plot_economic_demographics_midline <- plot_economic_demographics_midline %>% 
+  layout(title = "Economic Target Population: Midline",
+         colorway=duke_colorway,
+         paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+     margin = m,
+    font=plot_font
+     )
+
 plot_economic_demographics_midline
 
 ```
@@ -132,6 +192,16 @@ endline_economic_demo <- endline_data %>%
 plot_economic_demographics_endline <- endline_economic_demo %>% 
                               plot_ly(
                               labels = ~income_level, values = ~total, type = 'pie')
+
+plot_economic_demographics_endline <- plot_economic_demographics_endline %>% 
+  layout(title = "Economic Target Population: Endline",
+         colorway=duke_colorway,
+         paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+     margin = m,
+    font=plot_font
+     )
+
 plot_economic_demographics_endline
 ```
 
@@ -167,7 +237,14 @@ all_demographic_economic_plot <-
     xaxis = list(categoryorder = "trace"
                  ),
     yaxis = list(title = "Percent"), 
-    barmode = "stack")
+    barmode = "stack",
+    title = "Economic Target Population",
+         colorway=duke_colorway,
+         paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+     margin = m,
+    font=plot_font
+     )
 
 all_demographic_economic_plot
 ```
@@ -221,14 +298,521 @@ all_geographic_demo_plot %>% layout(
     xaxis = list(categoryorder = "array",
                  categoryarray = c("baseline", "midline", "endline")),
     yaxis = list(title = "Percent"), 
-    barmode = "stack")
+    barmode = "stack",
+  title = "Geographic Target Population",
+         colorway=duke_colorway,
+         paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+     margin = m,
+    font=plot_font
+     )
 
 all_geographic_demo_plot
-
 
 ```
 
 ### Geographic trends
 
 The focus becomes more urban over time.
+
+
+## Human Resources Trends
+
+Organizations provided information on their hiring practices over the course of the fellowship. Particular attention was paid to gender distribution.
+
+```{r gender}
+
+baseline_hr_gender <- baseline_data %>%
+  select(Survey:Organization, full_time_total:part_time_female) %>%
+  mutate(across(full_time_total:part_time_female, as.integer))
+
+midline_hr_gender <- midline_data %>%
+  select(Survey:Organization, full_time_total:part_time_female) %>%
+  mutate(across(full_time_total:part_time_female, as.integer))
+
+endline_hr_gender <- endline_data %>%
+  select(Survey:Organization, full_time_total:part_time_female) %>%
+  mutate(across(full_time_total:part_time_female, as.integer))
+
+```
+
+```{r gender_percent}
+
+full_hr_gender <- baseline_hr_gender %>%
+  left_join(midline_hr_gender,
+            by = "OrgID",
+            suffix = c("_baseline", "_midline")) %>%
+  left_join(endline_hr_gender,
+            by = "OrgID",
+            suffix = c("_baseline", "_endline")) %>%
+  select(!(Organization_midline)) %>%
+  select(!(Organization)) 
+  
+
+prct_changes_ft_all <- full_hr_gender %>%
+  mutate(
+    baseline = 0,
+    midline = (full_time_total_midline -
+                  full_time_total_baseline) / full_time_total_baseline,
+    
+    endline = (full_time_total - full_time_total_midline)/ full_time_total_midline) %>% 
+  select(!(full_time_total_baseline:part_time_female)) %>% 
+  select(!(1)) %>% 
+  mutate(across(everything(), ~replace_na(.,0))) %>% 
+  bind_rows(summarise(., OrgID = 0,
+                      across(baseline:endline, mean),
+                      across(where(is.character), ~"Mean"))) %>% 
+  pivot_longer(baseline:endline, names_to = "survey", values_to = "full_time_total")  
+  
+prct_changes_ft_f <- full_hr_gender %>%
+  mutate(
+    baseline = 0,
+    midline = (full_time_female_midline -
+                  full_time_female_baseline) / full_time_female_baseline,
+    
+    endline = (full_time_female - full_time_female_midline)/ full_time_female_midline) %>% 
+  select(!(full_time_total_baseline:part_time_female)) %>% 
+  select(!(1)) %>% 
+  mutate(across(everything(), ~replace_na(.,0))) %>% 
+  bind_rows(summarise(., OrgID = 0,
+                      across(baseline:endline, mean),
+                      across(where(is.character), ~"Mean"))) %>% 
+  pivot_longer(baseline:endline, names_to = "survey", values_to = "full_time_female") 
+
+prct_changes_pt_all <- full_hr_gender %>%
+  mutate(baseline =0,
+    midline = ifelse(
+      part_time_total_baseline != 0, (part_time_total_midline -
+         part_time_total_baseline) / part_time_total_baseline,0),
+    
+    endline = ifelse(
+      part_time_total_baseline != 0,
+      (part_time_total -
+         part_time_total_midline)
+      / part_time_total_midline,
+      0
+    )
+  )%>% 
+  select(!(full_time_total_baseline:part_time_female)) %>% 
+  select(!(1)) %>% 
+  mutate(across(everything(), ~replace_na(.,0))) %>% 
+  bind_rows(summarise(., OrgID = 0,
+                      across(baseline:endline, mean),
+                      across(where(is.character), ~"Mean"))) %>% 
+  pivot_longer(baseline:endline, names_to = "survey", values_to = "part_time_total") 
+
+prct_changes_pt_female <- full_hr_gender %>%
+  mutate(baseline = 0,
+    midline = ifelse(
+      part_time_female_baseline != 0,
+      (part_time_female_midline -
+         part_time_female_baseline) / part_time_female_baseline,
+      0
+    ),
+    
+    endline = ifelse(
+      part_time_female_midline != 0,
+      (part_time_female -
+         part_time_female_midline)
+      / part_time_female_midline,
+      0
+    )
+  )%>% 
+  select(!(full_time_total_baseline:part_time_female)) %>% 
+  select(!(1)) %>% 
+  mutate(across(everything(), ~replace_na(.,0))) %>% 
+  bind_rows(summarise(., OrgID = 0,
+                      across(baseline:endline, mean),
+                      across(where(is.character), ~"Mean"))) %>% 
+  pivot_longer(baseline:endline, names_to = "survey", values_to = "part_time_female") 
+
+
+```
+
+```{r recombine_data}
+
+all_percent_change <- prct_changes_ft_all %>% 
+                      left_join(prct_changes_ft_f, by = c("OrgID"="OrgID", "Organization_baseline" = "Organization_baseline", "survey" = "survey")) %>% 
+                      left_join(prct_changes_pt_all, by = c("OrgID"="OrgID", "Organization_baseline" = "Organization_baseline", "survey" = "survey")) %>% 
+                      left_join(prct_changes_pt_female, by = c("OrgID"="OrgID", "Organization_baseline" = "Organization_baseline", "survey" = "survey")) %>% 
+                      rename(Organization = Organization_baseline) %>% 
+                      pivot_wider(Organization:survey, names_from = Organization, values_from = full_time_total:part_time_female) %>% 
+                      add_column(dummy_total = 0) %>% 
+                      add_column(dummy_women = 0) %>% 
+                      add_column(date= c("2020-11-01","2021-05-01","2021-12-01")) %>% 
+                      mutate(date = as_date(date))
+
+```
+
+```{r plot_full_time_all}
+
+plot_full_time_all <- all_percent_change %>%
+  plot_ly(
+    x = ~ date,
+    y = ~ `full_time_total_Lily Health`,
+    type = 'scatter',
+    mode = 'lines',
+    name = "Lily Health",
+    line = list(color = duke_colorway [1],width = 1),
+    opacity = .4,
+     legendrank = 6
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_female_Lily Health`,
+    name = "Lily Health (Women)",
+    line = list(color = duke_colorway[1], dash = "dash"),
+    showlegend = FALSE
+
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_total_Kasole Secrets Company Ltd`,
+    name = "Kasole Secrets Company",
+    line = list (color = duke_colorway[2]),
+     legendrank = 5
+    
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_female_Kasole Secrets Company Ltd`,
+    name = "Kasole Secrets Company (Women)",
+    line = list (color = duke_colorway[2], dash = 'dash'),
+    showlegend = FALSE
+  ) %>%                     
+  add_trace(
+    y =  ~ `full_time_total_Femme International`,
+    name = "Femme International",
+    line = list (color = duke_colorway[3]),
+     legendrank = 4
+    
+  ) %>% 
+add_trace(
+    y =  ~ `full_time_female_Femme International`,
+    name = "Femme International (Women)",
+    line = list (color = duke_colorway[3], dash = "dash"),
+    showlegend = FALSE
+    
+  ) %>% 
+
+  add_trace(
+    y =  ~ `full_time_total_SaCoDé`,
+    name = "SaCoDé",
+    line = list (color = duke_colorway[4]),
+     legendrank = 8
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_female_SaCoDé`,
+    name = "SaCoDe (Women)",
+    line = list (color = duke_colorway[4], dash = "dash"),
+    showlegend = FALSE
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_total_Tai Tanzania`,
+    name = "Tai Tanzania",
+    line = list (color = duke_colorway[5]),
+     legendrank = 9
+    
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_total_Tai Tanzania`,
+    name = "Tai Tanzania (Women)",
+    line = list (color = duke_colorway[5], dash = "dash"),
+    showlegend = FALSE
+    
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_total_LVCT HEALTH`,
+    name = "LVCT Health",
+    line = list (color = duke_colorway[6]),
+     legendrank = 7
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_female_LVCT HEALTH`,
+    name = "LVCT Health (Women)",
+    line = list (color = duke_colorway[6], dash = "dash"),
+    showlegend = FALSE
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_total_Mean`,
+    name = "Mean",
+    line = list (color = duke_colorway[7], width = 2),
+    legendrank = 3,
+    opacity = 1
+  ) %>%
+  add_trace(
+    y =  ~ `full_time_female_Mean`,
+    name = "Mean (Women)",
+    line = list (
+      color = duke_colorway[7],
+      width = 2,
+      dash = "dash"),
+      showlegend= FALSE,
+    opacity = 1
+    
+    
+  ) %>%
+  add_trace(
+    y = ~ dummy_total,
+    name = "All Full-Time",
+    line = list(color = "rgb(0,0,0)"),
+    #visible = "legendonly",
+    showlegend = TRUE,
+    legendrank = 1
+   
+  ) %>%
+  add_trace(
+    y = ~ dummy_women,
+    name = "Full-Time Women",
+    line = list(color = "#000000", dash = "dash"),
+    legendrank = 2
+    
+    )
+
+plot_full_time_all <- plot_full_time_all %>%
+  layout(
+    xaxis = list(
+     # categoryorder = "array",
+    type = "date",
+    tickmode = "array",
+    tickvals = c("2020-11-01","2021-05-01","2021-12-01"),
+    tickformat = "%Y-%b",
+    #rangebreaks = list(values = c("2020-11-01","2021-05-01","2021-12-01")),
+      showgrid = FALSE
+    ),
+    yaxis = list(title = "Percent Change", showgrid = FALSE, tickformat = ".0%"),
+    title = "Full Time Employment Change",
+    
+    paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+    margin = m,
+    font = plot_font
+  )
+
+plot_full_time_all
+```
+
+In general, the employment data shows a downward trend. On average organizations reduced their workforce by `r round(all_percent_change$full_time_total_Mean[3]*100,0)`%, with the female workforce reducing by an equal amount `r round(all_percent_change$full_time_female_Mean[3]*100,0)`%. 
+
+## Revenue
+They made money
+
+```{r revenue_table}
+revenue <- endline_data %>% 
+            select (c(2:3, revenue_2019:revenue_2021)) %>% 
+            mutate(across(revenue_2019:revenue_2021, as.numeric)) %>% 
+            mutate(Mean = rowMeans(across(revenue_2019:revenue_2021),na.rm = TRUE))  %>% 
+            arrange(Organization) %>% 
+            mutate(OrgOrder = row_number())
+
+            #pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+            #mutate(Year = str_remove_all(Year, "revenue_")) %>% 
+            #pivot_wider(Year,names_from = Organization, values_from = Revenue)
+```
+
+
+```{r individual_revenue_tables}
+#Generate individual tables
+
+revenue_1 <- revenue %>% 
+             filter(OrgOrder ==1) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_")) 
+
+revenue_2 <- revenue %>% 
+             filter(OrgOrder ==2) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_")) 
+
+revenue_3 <- revenue %>% 
+             filter(OrgOrder ==3) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_"))
+
+revenue_4 <- revenue %>% 
+             filter(OrgOrder ==4) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_")) 
+
+revenue_5 <- revenue %>% 
+             filter(OrgOrder ==5) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_")) 
+
+revenue_6 <- revenue %>% 
+             filter(OrgOrder ==6) %>% 
+             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             mutate(Year = str_remove_all(Year, "revenue_")) 
+```
+
+```{r revenue_plot}
+
+plot_revenue_1 <- revenue_1 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                )  %>% 
+  layout(yaxis = list(tickprefix = "$"))
+                
+
+plot_revenue_2 <- revenue_2 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                ) %>% 
+  layout(yaxis = list(tickprefix = "$"))
+               
+
+plot_revenue_3 <- revenue_3 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                ) %>% 
+  layout(yaxis = list(tickprefix = "$"))
+              
+
+plot_revenue_4 <- revenue_4 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                ) %>% 
+  layout(yaxis = list(tickprefix = "$"))
+               
+
+plot_revenue_5 <- revenue_5 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                ) %>% 
+  layout(yaxis = list(tickprefix = "$"))
+               
+plot_revenue_6 <- revenue_6 %>% 
+                plot_ly(
+                  x = ~Year,
+                  y = ~Revenue,
+                  type = "bar",
+                  marker = list(color = duke_colorway[1:4])
+                ) %>% 
+  layout(yaxis = list(tickprefix = "$"))
+                
+
+plot_revenues <- subplot(plot_revenue_1, plot_revenue_2, plot_revenue_3,plot_revenue_4,plot_revenue_5,plot_revenue_6, nrows = 3, shareX = TRUE, margin=.05) %>% 
+  layout(title = list(text = "Yearly Revenue by Organization"),
+                  yaxis = list(tickprefix = "$"),
+                  paper_bgcolor = duke_paperbackground,
+                  plot_bgcolor = duke_plotcolor,
+                  margin =list(t=50),
+                  font = list(
+  family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
+  size = 12,
+  color = '#363636'),
+                           showlegend=FALSE
+                  )
+
+
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = revenue_1$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = revenue_2$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.2,  
+    y = 0.625,  
+    text = revenue_3$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.8,  
+    y = 0.625,  
+    text = revenue_4$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.825,  
+    y = 0.45,  
+    text = "2021 data<br>pending",  
+    xref = "paper",  
+    yref = "paper",  
+    align = "left",
+    
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.2,  
+    y = 0.3,  
+    text = revenue_5$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.8,  
+    y = 0.3,  
+    text = revenue_6$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  )
+  
+  )
+
+plot_revenues <- plot_revenues %>% layout(annotations=annotations)
+
+
+plot_revenues
+
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+sum_unique <- endline_data %>% 
+              summarise(sum(as.double(unique_served)))
+
+```
 
