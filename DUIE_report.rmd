@@ -1467,7 +1467,8 @@ plot_likert <- plot_likert %>%
                   name = ~likert_ends$question,
                   type = "scatter",
                   mode = "markers",
-                  marker = list(size = 10, symbol = "arrow-right"),
+                  marker = list(size
+                                = 10, symbol = "arrow-right"),
                   orientation = "h",  
                   color = duke_colorway_75[1]
                   )
