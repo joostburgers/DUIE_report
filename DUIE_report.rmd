@@ -57,6 +57,56 @@ endline_data <- endline_data %>%
 #This is where you create your own custom color palette for the traces.
 duke_colorway = c("#C84E00","#E89923","#FFD960","#A1B70D","#339898","#1D6363","#005587","#0577B1","#993399")
 
+duke_colorway_75 = c(
+  "rgba(200, 78, 0,.75)",
+  "rgba(232, 153, 35,.75)",
+  "rgba(255, 217, 96,.75)",
+  "rgba(161, 183, 13,.75)",
+  "rgba(51, 152, 152,.75)",
+  "rgba(29, 99, 99,.75)",
+  "rgba(0, 85, 135,.75)",
+  "rgba(5, 119, 177,.75)",
+  "rgba(153, 51, 153,.75)"
+) 
+
+duke_colorway_50 = c(
+  "rgba(200, 78, 0,.5)",
+  "rgba(232, 153, 35,.5)",
+  "rgba(255, 217, 96,.5)",
+  "rgba(161, 183, 13,.5)",
+  "rgba(51, 152, 152,.5)",
+  "rgba(29, 99, 99,.5)",
+  "rgba(0, 85, 135,.5)",
+  "rgba(5, 119, 177,.5)",
+  "rgba(153, 51, 153,.5)"
+) 
+               
+duke_colorway_25 = c(
+  "rgba(200, 78, 0,.25)",
+  "rgba(232, 153, 35,.25)",
+  "rgba(255, 217, 96,.25)",
+  "rgba(161, 183, 13,.25)",
+  "rgba(51, 152, 152,.25)",
+  "rgba(29, 99, 99,.25)",
+  "rgba(0, 85, 135,.25)",
+  "rgba(5, 119, 177,.25)",
+  "rgba(153, 51, 153,.25)"
+) 
+               
+duke_colorway_10 = c(
+  "rgba(200, 78, 0,.1)",
+  "rgba(232, 153, 35,.1)",
+  "rgba(255, 217, 96,.1)",
+  "rgba(161, 183, 13,.1)",
+  "rgba(51, 152, 152,.1)",
+  "rgba(29, 99, 99,.1)",
+  "rgba(0, 85, 135,.1)",
+  "rgba(5, 119, 177,.1)",
+  "rgba(153, 51, 153,.1)"
+) 
+               
+
+                
 #This controls the background color for the entire chart. Probably best left white.
 duke_paperbackground = c('rgba(255,255,255,0)')
 
@@ -76,6 +126,15 @@ plot_font <- list(
   size = 15,
   color = '#363636')
 
+plot_font_small <- list(
+  family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
+  size = 12,
+  color = '#363636')
+
+plot_font_extra_small <- list(
+  family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
+  size = 10,
+  color = '#363636')
 
 ```
 
@@ -806,13 +865,622 @@ plot_revenues
 
 ```
 
+## Revenue Streams
 
 
+
+```{r revenue_streams}
+
+lvct_revenue <-  midline_data %>% 
+                 select(c(1:3, payment_from_sales_ly:fundraising_3y)) %>% 
+                      filter(OrgID == 6) %>% 
+                  mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
+                  mutate(Survey = "baseline")
+                      
+
+baseline_revenue  <-  baseline_data %>%  
+                      select(c(1:3,payment_from_sales_ly:fundraising_3y)) %>% 
+                      filter(OrgID != 6) %>% 
+                        mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
+                      bind_rows(lvct_revenue) %>% 
+                      rename_with(~ gsub("ly", "initial", .x, fixed = TRUE)) %>% 
+                      rename_with(~ gsub("3y", "projected", .x, fixed = TRUE)) 
+
+
+endline_revenue <-  endline_data %>% 
+                        select(c(1:3,payment_from_sales_ly:fundraising_3y)) %>% 
+                      mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
+                      select(!ends_with("3y")) %>% 
+                      rename_with(~ gsub("ly", "current", .x, fixed = TRUE))  
+
+total_revenue <- baseline_revenue %>% 
+                  left_join(endline_revenue, by = c("OrgID"="OrgID")) %>% 
+                  select(!ends_with(".y")) %>% 
+                  rename_with(~ gsub(".x", "", .x, fixed = TRUE)) %>% 
+                  pivot_longer(payment_from_sales_initial:fundraising_current, names_to = "category", values_to = "values")  %>% 
+                  arrange(Organization,category) %>% 
+                  mutate(date = str_remove_all(category,".*(?=\\_)_" )) %>% 
+                  mutate(category = gsub("_[^_]*$", "", category)) %>% 
+                  pivot_wider(c("Organization","OrgID","date"), names_from = category, values_from = values) %>% 
+  group_by(date) %>% 
+  mutate(OrgOrder = row_number())
+```
+
+
+```{r individual_plots}
+
+
+projections_1 <-  total_revenue %>%
+  filter(OrgOrder == 1) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_sentence(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO"))
+
+plot_projections_1 <- projections_1 %>%
+  plot_ly(
+    x = ~ initial,
+    y = ~ name,
+    type = "bar",
+    name = "Initial",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/")
+    )
+  ) %>%
+  add_trace(
+    x =  ~ current,
+    name = "Current",
+    marker = list(
+      color = duke_colorway_10[2],
+      line = list(color = duke_colorway_75[2], width = 1.5),
+      pattern = list(shape = "\\")
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected",
+    marker = list(
+      color = "transparent",
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "/")
+    )
+    
+  ) %>%
+  layout(
+    barmode = "overlay",
+    xaxis = list(title = "Percent", ticksuffix = "%"),
+    yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+    paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+    margin = list(t = 50),
+    font = plot_font_small
+  )
+#plot_projections_1
+```
+
+
+
+```{r projections_2}
+
+
+projections_2 <-  total_revenue %>%
+  filter(OrgOrder == 2) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_sentence(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO"))
+
+plot_projections_2 <- projections_2 %>%
+  plot_ly(
+    x = ~ initial,
+    y = ~ name,
+    type = "bar",
+    name = "Initial",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/")
+    )
+  ) %>%
+  add_trace(
+    x =  ~ current,
+    name = "Current",
+    marker = list(
+      color = duke_colorway_10[2],
+      line = list(color = duke_colorway_75[2], width = 1.5),
+      pattern = list(shape = "\\")
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected",
+    marker = list(
+      color = "transparent",
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "/")
+    )
+    
+  ) %>%
+  layout(
+    barmode = "overlay",
+    xaxis = list(title = "Percent", ticksuffix = "%"),
+    yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+    paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+    margin = list(t = 50),
+    font = plot_font_small
+  )
+#plot_projections_2
+
+```
+
+
+```{r total_revenue_reduced}
+total_revenue_reduced <- total_revenue %>%
+  mutate(sales = across(starts_with(c("payment_", "third"))) %>% rowSums(.)) %>%                          select(!(starts_with(c("payment_","third"))))
+```
+
+
+```{r individual_revenue_reduced}
+projection_reduced_1 <- total_revenue_reduced %>%
+  filter(OrgOrder == 1) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+projection_reduced_2 <- total_revenue_reduced %>%
+  filter(OrgOrder == 2) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+projection_reduced_3 <- total_revenue_reduced %>%
+  filter(OrgOrder == 3) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+projection_reduced_4 <- total_revenue_reduced %>%
+  filter(OrgOrder == 4) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+projection_reduced_5 <- total_revenue_reduced %>%
+  filter(OrgOrder == 5) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+projection_reduced_6 <- total_revenue_reduced %>%
+  filter(OrgOrder == 6) %>%
+  select(!(OrgOrder)) %>%
+  select_if(negate(function(col)
+    is.numeric(col) && sum(col) < 1)) %>%
+  pivot_longer(4:last_col()) %>%
+  pivot_wider(c("Organization", "name"),
+              names_from = date,
+              values_from = value) %>%
+  mutate(name = str_to_title(str_replace_all(name, "_", " "))) %>%
+  mutate(name = str_replace(name, "Ngo", "NGO/")) %>%
+  mutate(name = str_replace(name, "Csr", "/CSR"))
+
+
+```
+
+
+```{r funding_plots}
+plot_projections_reduced_1 <- projection_reduced_1 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend= TRUE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend = TRUE
+    )
+) %>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+           showlegend = TRUE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+
+
+
+plot_projections_reduced_2 <- projection_reduced_2 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend=FALSE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend=FALSE
+  )
+)%>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+             showlegend = FALSE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+ 
+
+
+
+
+plot_projections_reduced_3 <- projection_reduced_3 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend=FALSE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend=FALSE
+    )
+    
+  ) %>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+             showlegend = FALSE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+
+
+plot_projections_reduced_4 <- projection_reduced_4 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend=FALSE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend=FALSE
+    )
+ )%>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+             showlegend = FALSE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+
+  
+
+plot_projections_reduced_5 <- projection_reduced_5 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend=TRUE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend=TRUE
+    )
+  ) %>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+             showlegend = TRUE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+
+
+plot_projections_reduced_6 <- projection_reduced_6 %>%
+  plot_ly(
+    x = ~ current,
+    y = ~ name,
+    type = "bar",
+    name = "Current",
+    orientation = "h",
+    marker = list(
+      color = duke_colorway_10[1],
+      line = list(color = duke_colorway_75[1], width = 1.5),
+      pattern = list(shape = "/"),
+      showlegend=FALSE
+    )
+  ) %>%
+  add_trace(
+    x =  ~ projected,
+    name = "Projected in baseline",
+    marker = list(
+      color = duke_colorway_10[8],
+      line = list(color = duke_colorway_75[8], width = 1.5),
+      pattern = list(shape = "\\"),
+      showlegend=FALSE
+    )
+) %>% layout(barmode = "overlay",
+             xaxis = list(title = "Percent", ticksuffix = "%"),
+             yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+             paper_bgcolor = duke_paperbackground,
+            # showlegend = FALSE,
+             plot_bgcolor = duke_plotcolor,
+             margin =list(t=50),
+             font = plot_font_extra_small
+             ) 
+
+
+
+```
+
+```{r funding_subplot}
+
+plot_projections <- subplot(plot_projections_reduced_1, plot_projections_reduced_2, plot_projections_reduced_3,plot_projections_reduced_4,plot_projections_reduced_5,plot_projections_reduced_6, nrows = 3, shareX = TRUE, margin=.09) %>% 
+  layout(title = list(text = "Projected versus Current Funding Sources"),
+         barmode = "overlay",
+    xaxis = list(title = "Percent", ticksuffix = "%"),
+ #  yaxis = list(title = "Funding Type", categoryorder = "category descending"),
+                  paper_bgcolor = duke_paperbackground,
+                  plot_bgcolor = duke_plotcolor,
+                  margin =list(t=50),
+                  font = plot_font_extra_small
+                 )
+
+
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = projection_reduced_1$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = projection_reduced_2$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.2,  
+    y = 0.625,  
+    text = projection_reduced_3$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.8,  
+    y = 0.625,  
+    text = projection_reduced_4$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  
+  list( 
+    x = 0.2,  
+    y = 0.3,  
+    text = projection_reduced_5$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.8,  
+    y = 0.3,  
+    text = projection_reduced_6$Organization[1],  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  )
+)
+
+plot_projections <- plot_projections %>% layout(annotations=annotations)
+
+plot_projections
+```
+
+
+```{r likert_scale}
+
+baseline_likert <- baseline_data %>% 
+                    select(c(1,pitch_investors:apply_fellowships)) %>% 
+                   group_by(Survey) %>% 
+                    drop_na() %>% 
+                mutate(across(pitch_investors:apply_fellowships,as.integer)) %>% 
+                    summarise(across(where(is.numeric), mean))
+
+endline_likert <- endline_data %>% 
+                   arrange(Organization) %>% 
+                   mutate(OrgOrder = row_number()) %>% 
+                   relocate(OrgOrder, .before =1) %>% 
+                    select(c(2,pitch_investors:apply_fellowships)) %>% 
+                   group_by(Survey) %>% 
+                    mutate(across(pitch_investors:apply_fellowships,as.integer)) %>% 
+                  summarise(across(where(is.numeric), mean))
+likert_total <- baseline_likert %>% 
+                bind_rows(endline_likert) %>% 
+                pivot_longer(where(is.numeric), names_to = "question") %>% 
+                group_by(question) %>% 
+                arrange(question, Survey)
+               # pivot_wider (question, names_from = "Survey", values_from = "value")
+
+```
 
 
 ```{r}
-sum_unique <- endline_data %>% 
-              summarise(sum(as.double(unique_served)))
+likert_ends <- likert_total %>% 
+                filter (Survey == "endline")
+
+plot_likert <- likert_total %>% 
+                plot_ly(
+                  x = ~value,
+                  y = ~question,
+                  name = ~question,
+                  type = "scatter",
+                  mode = "line",
+                  line = list(color = duke_colorway_10[1],width = 14),
+                  orientation = "h"  
+                  
+                ) 
+
+plot_likert <- plot_likert %>% 
+                add_trace(likert_ends, x = ~likert_ends$value,
+                  y = ~likert_ends$question,
+                  name = ~likert_ends$question,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 10, symbol = "arrow-right"),
+                  orientation = "h",  
+                  color = duke_colorway_75[1]
+                  )
+
+plot_likert <- plot_likert %>%   
+                  layout(
+                    xaxis = list(tickvals = c(1,2,3,4,5,6,7),
+                                 ticktext = c("1<br>Not at all confident", "2", "3", "4", "5","6", "7<br>extremely confident"),
+                                 range = c(1,7)),
+                    showlegend = FALSE
+                    )
+                
+plot_likert
 
 ```
 
