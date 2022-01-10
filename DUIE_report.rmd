@@ -1583,7 +1583,8 @@ sample_plot <- sample_reduced %>%
                   x = ~value,
                   name= ~survey,
                   type = "bar",
-                  opacity = .5
+                  opacity = .5,
+                  color = ~survey
                  )
   
 sample_reduced_2 <- projection_reduced_2 %>% 
@@ -1604,7 +1605,7 @@ sample_subplot <-  subplot(sample_plot, sample_plot_2,sample_plot, sample_plot_2
   layout(title = list(text = "Projected versus Current Funding Sources"),
          barmode = "overlay",
     xaxis = list(title = "Percent", ticksuffix = "%"),
-                 # colorway = duke_colorway_75[3:4],
+                  colorway = duke_colorway_75[1:2],
                   paper_bgcolor = duke_paperbackground,
                   plot_bgcolor = duke_plotcolor,
                   margin =list(t=50),
@@ -1612,6 +1613,126 @@ sample_subplot <-  subplot(sample_plot, sample_plot_2,sample_plot, sample_plot_2
                  )
 
 sample_subplot
+
+```
+
+
+
+```{r new_projection_plot}
+
+
+revised_projection_1 <- projection_reduced_1 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+
+
+revised_projection_2 <- projection_reduced_2 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+revised_projection_3 <- projection_reduced_3 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+revised_projection_4 <- projection_reduced_4 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+revised_projection_5 <- projection_reduced_5 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+revised_projection_6 <- projection_reduced_6 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+
+revised_plot_1 <- revised_projection_1 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = TRUE
+                 )
+
+
+revised_plot_2 <- revised_projection_2 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = FALSE
+                 )
+
+revised_plot_3 <- revised_projection_3 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = FALSE
+                 )
+
+revised_plot_4 <- revised_projection_4 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = FALSE
+                 )
+
+revised_plot_5 <- revised_projection_5 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = FALSE
+                 )
+
+revised_plot_6 <- revised_projection_6 %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5,
+                  color = ~survey,
+                  showleged = F
+                 )
+
+revised_projection_plot <-  subplot(revised_plot_1, revised_plot_2,revised_plot_3,revised_plot_4,revised_plot_5,revised_plot_6, nrows = 3, shareX = TRUE, margin=.09) %>% 
+  layout(title = list(text = "Projected versus Current Funding Sources"),
+         barmode = "overlay",
+    xaxis = list(title = "Percent", ticksuffix = "%"),
+                  colorway = duke_colorway_75[1:2],
+                  paper_bgcolor = duke_paperbackground,
+                  plot_bgcolor = duke_plotcolor,
+                  margin =list(t=50),
+                  font = plot_font_extra_small
+             #     showlegend = FALSE
+                 )
+
+revised_projection_plot
+
+
+
+
+
 
 ```
 
