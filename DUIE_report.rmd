@@ -563,7 +563,7 @@ add_trace(
   ) %>%
   add_trace(
     y =  ~ `full_time_female_SaCoDé`,
-    name = "SaCoDe (Women)",
+    name = "SaCoDé (Women)",
     line = list (color = duke_colorway[4], dash = "dash"),
     showlegend = FALSE
   ) %>%
@@ -676,244 +676,239 @@ revenue <- endline_data %>%
 
 revenue_1 <- revenue %>% 
              filter(OrgOrder ==1) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_")) 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_2 <- revenue %>% 
              filter(OrgOrder ==2) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_")) 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_3 <- revenue %>% 
              filter(OrgOrder ==3) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_"))
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_"))
 
 revenue_4 <- revenue %>% 
              filter(OrgOrder ==4) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_")) 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_5 <- revenue %>% 
              filter(OrgOrder ==5) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_")) 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_6 <- revenue %>% 
              filter(OrgOrder ==6) %>% 
-             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
-             mutate(Year = str_remove_all(Year, "revenue_")) 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>%              mutate(Year = str_remove_all(Year, "revenue_")) 
 ```
 
 ```{r revenue_plot}
-
-plot_revenue_1 <- revenue_1 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                )  %>% 
+plot_revenue_1 <- revenue_1 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+  )  %>%
   layout(yaxis = list(tickprefix = "$"))
-                
 
-plot_revenue_2 <- revenue_2 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                ) %>% 
+plot_revenue_2 <- revenue_2 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+  ) %>%
   layout(yaxis = list(tickprefix = "$"))
-               
 
-plot_revenue_3 <- revenue_3 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                ) %>% 
+
+plot_revenue_3 <- revenue_3 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+) %>%
   layout(yaxis = list(tickprefix = "$"))
-              
 
-plot_revenue_4 <- revenue_4 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                ) %>% 
+
+plot_revenue_4 <- revenue_4 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+) %>%
   layout(yaxis = list(tickprefix = "$"))
-               
 
-plot_revenue_5 <- revenue_5 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                ) %>% 
+plot_revenue_5 <- revenue_5 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+  ) %>%
   layout(yaxis = list(tickprefix = "$"))
-               
-plot_revenue_6 <- revenue_6 %>% 
-                plot_ly(
-                  x = ~Year,
-                  y = ~Revenue,
-                  type = "bar",
-                  marker = list(color = duke_colorway[1:4])
-                ) %>% 
+
+plot_revenue_6 <- revenue_6 %>%
+  plot_ly(
+    x = ~ Year,
+    y = ~ Revenue,
+    type = "bar",
+    marker = list(color = duke_colorway[1:4])
+  ) %>%
   layout(yaxis = list(tickprefix = "$"))
-                
-
-plot_revenues <- subplot(plot_revenue_1, plot_revenue_2, plot_revenue_3,plot_revenue_4,plot_revenue_5,plot_revenue_6, nrows = 3, shareX = TRUE, margin=.05) %>% 
-  layout(title = list(text = "Yearly Revenue by Organization"),
-                  yaxis = list(tickprefix = "$"),
-                  paper_bgcolor = duke_paperbackground,
-                  plot_bgcolor = duke_plotcolor,
-                  margin =list(t=50),
-                  font = list(
-  family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
-  size = 12,
-  color = '#363636'),
-                           showlegend=FALSE
-                  )
 
 
-annotations = list( 
-  list( 
-    x = 0.2,  
-    y = 1.0,  
-    text = revenue_1$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
-  ),  
-  list( 
-    x = 0.8,  
-    y = 1,  
-    text = revenue_2$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
-  ),  
-  list( 
-    x = 0.2,  
-    y = 0.625,  
-    text = revenue_3$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
+plot_revenues <-
+  subplot(
+    plot_revenue_1,
+    plot_revenue_2,
+    plot_revenue_3,
+    plot_revenue_4,
+    plot_revenue_5,
+    plot_revenue_6,
+    nrows = 3,
+    shareX = TRUE,
+    margin = .05
+  ) %>%
+  layout(
+    title = list(text = "Yearly Revenue by Organization"),
+    yaxis = list(tickprefix = "$"),
+    paper_bgcolor = duke_paperbackground,
+    plot_bgcolor = duke_plotcolor,
+    margin = list(t = 50),
+    font = list(
+      family = "'Playfair Display','Helvetica Neue',Helvetica,Arial,sans-serif",
+      size = 12,
+      color = '#363636'
+    ),
+    showlegend = FALSE
+)
+
+annotations = list(
+  list(
+    x = 0.2,
+    y = 1.0,
+    text = revenue_1$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
   ),
-  list( 
-    x = 0.8,  
-    y = 0.625,  
-    text = revenue_4$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
+  list(
+    x = 0.8,
+    y = 1,
+    text = revenue_2$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
   ),
-  list( 
-    x = 0.92,  
-    y = 0.45,  
-    text = "2021 data<br>pending",  
-    xref = "paper",  
-    yref = "paper",  
+  list(
+    x = 0.2,
+    y = 0.625,
+    text = revenue_3$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
+  ),
+  list(
+    x = 0.8,
+    y = 0.625,
+    text = revenue_4$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
+  ),
+  list(
+    x = 0.92,
+    y = 0.45,
+    text = "2021 data<br>pending",
+    xref = "paper",
+    yref = "paper",
     align = "left",
     
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
   ),
-  list( 
-    x = 0.2,  
-    y = 0.3,  
-    text = revenue_5$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
+  list(
+    x = 0.2,
+    y = 0.3,
+    text = revenue_5$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
   ),
-  list( 
-    x = 0.8,  
-    y = 0.3,  
-    text = revenue_6$Organization[1],  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE 
+  list(
+    x = 0.8,
+    y = 0.3,
+    text = revenue_6$Organization[1],
+    xref = "paper",
+    yref = "paper",
+    xanchor = "center",
+    yanchor = "bottom",
+    showarrow = FALSE
   )
-  
-  )
+)
 
-plot_revenues <- plot_revenues %>% layout(annotations=annotations)
-
+plot_revenues <- plot_revenues %>% layout(annotations = annotations)
 
 plot_revenues
-
-
-
-
-
-
 
 ```
 
 ## Revenue Streams
 
-
-
 ```{r revenue_streams}
 
-lvct_revenue <-  midline_data %>% 
-                 select(c(1:3, payment_from_sales_ly:fundraising_3y)) %>% 
-                      filter(OrgID == 6) %>% 
-                  mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
-                  mutate(Survey = "baseline")
-                      
+lvct_revenue <-  midline_data %>%
+  select(c(1:3, payment_from_sales_ly:fundraising_3y)) %>%
+  filter(OrgID == 6) %>%
+  mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>%
+  mutate(Survey = "baseline")
 
-baseline_revenue  <-  baseline_data %>%  
-                      select(c(1:3,payment_from_sales_ly:fundraising_3y)) %>% 
-                      filter(OrgID != 6) %>% 
-                        mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
-                      bind_rows(lvct_revenue) %>% 
-                      rename_with(~ gsub("ly", "initial", .x, fixed = TRUE)) %>% 
-                      rename_with(~ gsub("3y", "projected", .x, fixed = TRUE)) 
+baseline_revenue  <-  baseline_data %>%
+  select(c(1:3, payment_from_sales_ly:fundraising_3y)) %>%
+  filter(OrgID != 6) %>%
+  mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>%
+  bind_rows(lvct_revenue) %>%
+  rename_with( ~ gsub("ly", "initial", .x, fixed = TRUE)) %>%
+  rename_with( ~ gsub("3y", "projected", .x, fixed = TRUE))
 
+endline_revenue <-  endline_data %>%
+  select(c(1:3, payment_from_sales_ly:fundraising_3y)) %>%
+  mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>%
+  select(!ends_with("3y")) %>%
+  rename_with( ~ gsub("ly", "current", .x, fixed = TRUE))
 
-endline_revenue <-  endline_data %>% 
-                        select(c(1:3,payment_from_sales_ly:fundraising_3y)) %>% 
-                      mutate(across(payment_from_sales_ly:fundraising_3y, as.double)) %>% 
-                      select(!ends_with("3y")) %>% 
-                      rename_with(~ gsub("ly", "current", .x, fixed = TRUE))  
-
-total_revenue <- baseline_revenue %>% 
-                  left_join(endline_revenue, by = c("OrgID"="OrgID")) %>% 
-                  select(!ends_with(".y")) %>% 
-                  rename_with(~ gsub(".x", "", .x, fixed = TRUE)) %>% 
-                  pivot_longer(payment_from_sales_initial:fundraising_current, names_to = "category", values_to = "values")  %>% 
-                  arrange(Organization,category) %>% 
-                  mutate(date = str_remove_all(category,".*(?=\\_)_" )) %>% 
-                  mutate(category = gsub("_[^_]*$", "", category)) %>% 
-                  pivot_wider(c("Organization","OrgID","date"), names_from = category, values_from = values) %>% 
-  group_by(date) %>% 
+total_revenue <- baseline_revenue %>%
+  left_join(endline_revenue, by = c("OrgID" = "OrgID")) %>%
+  select(!ends_with(".y")) %>%
+  rename_with( ~ gsub(".x", "", .x, fixed = TRUE)) %>%
+  pivot_longer(
+    payment_from_sales_initial:fundraising_current,
+    names_to = "category",
+    values_to = "values"
+  )  %>%
+  arrange(Organization, category) %>%
+  mutate(date = str_remove_all(category, ".*(?=\\_)_")) %>%
+  mutate(category = gsub("_[^_]*$", "", category)) %>%
+  pivot_wider(c("Organization", "OrgID", "date"),
+              names_from = category,
+              values_from = values) %>%
+  group_by(date) %>%
   mutate(OrgOrder = row_number())
 ```
 
 
 ```{r individual_plots}
-
-
 projections_1 <-  total_revenue %>%
   filter(OrgOrder == 1) %>%
   select(!(OrgOrder)) %>%
@@ -974,8 +969,6 @@ plot_projections_1 <- projections_1 %>%
 
 
 ```{r projections_2}
-
-
 projections_2 <-  total_revenue %>%
   filter(OrgOrder == 2) %>%
   select(!(OrgOrder)) %>%
@@ -1334,8 +1327,6 @@ plot_projections_reduced_6 <- projection_reduced_6 %>%
              font = plot_font_extra_small
              ) 
 
-
-
 ```
 
 ```{r funding_subplot}
@@ -1580,6 +1571,47 @@ plot_likert_mode
 
 
 ```{r ranked_choice}
+
+sample_reduced <- projection_reduced_1 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+
+sample_plot <- sample_reduced %>% 
+                plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name= ~survey,
+                  type = "bar",
+                  opacity = .5
+                 )
+  
+sample_reduced_2 <- projection_reduced_2 %>% 
+                  select(!(initial)) %>% 
+                  pivot_longer(current:projected, names_to = "survey") %>% 
+                  select(!(Organization))
+
+sample_plot_2 <- sample_reduced_2 %>% 
+                  plot_ly(
+                  y = ~name,
+                  x = ~value,
+                  name = ~survey,
+                 type = "bar",
+                 showlegend=FALSE
+                )
+
+sample_subplot <-  subplot(sample_plot, sample_plot_2,sample_plot, sample_plot_2,sample_plot, sample_plot_2, nrows = 3, shareX = TRUE, margin=.09) %>% 
+  layout(title = list(text = "Projected versus Current Funding Sources"),
+         barmode = "overlay",
+    xaxis = list(title = "Percent", ticksuffix = "%"),
+                 # colorway = duke_colorway_75[3:4],
+                  paper_bgcolor = duke_paperbackground,
+                  plot_bgcolor = duke_plotcolor,
+                  margin =list(t=50),
+                  font = plot_font_extra_small
+                 )
+
+sample_subplot
 
 ```
 
