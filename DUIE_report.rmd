@@ -6,11 +6,15 @@ author:
   affiliation: Duke university, Innovation and Enterprise
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: rmdformats::html_clean
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), 'index.html')) })
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
+
+
+
 
 
 ```{r load_libraries}
@@ -1482,6 +1486,50 @@ plot_likert <- plot_likert %>%
                     )
                 
 plot_likert
+
+```
+
+
+```{r unique_users}
+
+baseline_likert_mode <- baseline_data %>% 
+                    select(c(1:3,pitch_investors:apply_fellowships)) %>% 
+                   group_by(Survey) %>% 
+                    drop_na() %>% 
+                    pivot_longer(pitch_investors:apply_fellowships) %>% 
+                    #pivot_wider(names_from = value) %>% 
+                    group_by(Survey,name, value) %>% 
+                    count %>% 
+                    pivot_wider(Survey:name, names_from = value, values_from = n, values_fill = 0)  %>% 
+              mutate ("1"=0, "5" = 0) %>% 
+                    relocate("3",.after = name) %>% 
+                    relocate("2",.after = name) %>% 
+                    relocate("1",.after = name) %>% 
+                    relocate("5", .after = "4")
+                 
+
+endline_likert_mode <- endline_data %>% 
+                      filter(OrgID !=6) %>% 
+                   select(c(1:3,pitch_investors:apply_fellowships)) %>% 
+                   group_by(Survey) %>% 
+                    drop_na() %>% 
+                    pivot_longer(pitch_investors:apply_fellowships) %>% 
+                    #pivot_wider(names_from = value) %>% 
+                    group_by(Survey,name, value) %>% 
+                    count %>% 
+                    pivot_wider(Survey:name, names_from = value, values_from = n, values_fill = 0)   %>% 
+                    mutate ("1" = 0, "2"=0, "3"= 0) %>% 
+                    relocate(7:9, .after= "name") %>% 
+                    relocate("4", .after = "3")
+                  
+  
+
+all_likert_mode <- baseline_likert_mode %>% 
+                   bind_rows(endline_likert_mode) %>% 
+                   arrange(name)
+             
+
+all_likert_mode
 
 ```
 
