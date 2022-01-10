@@ -676,32 +676,32 @@ revenue <- endline_data %>%
 
 revenue_1 <- revenue %>% 
              filter(OrgOrder ==1) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_2 <- revenue %>% 
              filter(OrgOrder ==2) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_3 <- revenue %>% 
              filter(OrgOrder ==3) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_"))
 
 revenue_4 <- revenue %>% 
              filter(OrgOrder ==4) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_5 <- revenue %>% 
              filter(OrgOrder ==5) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_")) 
 
 revenue_6 <- revenue %>% 
              filter(OrgOrder ==6) %>% 
-             pivot_longer(revenue_2019:Mean, names_to = "Year", values_to = "Revenue") %>% 
+             pivot_longer(revenue_2019:revenue_2021, names_to = "Year", values_to = "Revenue") %>% 
              mutate(Year = str_remove_all(Year, "revenue_")) 
 ```
 
@@ -822,7 +822,7 @@ annotations = list(
     showarrow = FALSE 
   ),
   list( 
-    x = 0.825,  
+    x = 0.92,  
     y = 0.45,  
     text = "2021 data<br>pending",  
     xref = "paper",  
@@ -1525,11 +1525,61 @@ endline_likert_mode <- endline_data %>%
   
 
 all_likert_mode <- baseline_likert_mode %>% 
-                   bind_rows(endline_likert_mode) %>% 
-                   arrange(name)
+                   bind_rows(endline_likert_mode)  %>% 
+                   pivot_longer(3:9, names_to = "x", values_to = "size")
              
 
 all_likert_mode
+
+```
+
+
+## Likert Chart with bubbles
+
+```{r}
+
+plot_likert_mode <- all_likert_mode %>%   
+                    plot_ly(
+                      x = ~x,
+                      y = ~name,
+                      type = "scatter",
+                      mode = "markers",
+                      opacity = .8,
+                      size = ~size,
+                      sizes = c(0,40),
+                      name = ~Survey,
+                      hoverinfo='text',
+    text= ~paste('Count:', size),
+      marker = list(
+        sizemode='diameter',
+                  opacity = 0.8
+            )
+                      ) %>% 
+  layout(
+    title = list(text = "How confident do you feel about<br>the following aspects of raising capital?",x=.25, xanchor = "left"),
+    xaxis = list(title = "",
+                  tickvals = c(1,2,3,4,5,6,7),
+                  ticktext = c("1<br>Not at all confident", "2", "3", "4", "5","6",  
+                              "7<br>Extremely confident"),
+                  range = c(0,8)),
+    yaxis = list(title = "",
+                  tickvals = c(0,1,2,3,4),
+                  ticktext = c("Apply to fellowships", "Apply to grant foundations", "Apply to government grants", "Pitch competition", "Pitch investors"),
+                 showgrid = FALSE),
+                 margin = list(t=75, pad = 5),
+                font = plot_font_small,
+                colorway = duke_colorway_75[4:5]
+  )
+                     
+
+plot_likert_mode 
+
+
+
+```
+
+
+```{r ranked_choice}
 
 ```
 
